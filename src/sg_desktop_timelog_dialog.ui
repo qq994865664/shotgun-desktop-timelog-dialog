@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ShotgunDesktopVersionDialog</class>
+ <widget class="QDialog" name="ShotgunDesktopVersionDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>722</width>
+    <height>585</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>ShotgunVersionDesktop</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_4">
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout_3" columnstretch="3,5">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="spacing">
+      <number>0</number>
+     </property>
+     <item row="0" column="0">
+      <widget class="QTabWidget" name="tabWidgetList">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <widget class="QWidget" name="tabMyTask">
+        <attribute name="title">
+         <string>MyTasks</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="0">
+          <layout class="QGridLayout" name="gridLayoutMyTask">
+           <item row="0" column="0">
+            <widget class="QLineEdit" name="lineEditMyTaskSearch"/>
+           </item>
+           <item row="1" column="0">
+            <widget class="QTreeView" name="treeViewMyTask"/>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tabAsset">
+        <attribute name="title">
+         <string>Assets</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="0">
+          <layout class="QGridLayout" name="gridLayoutAsset">
+           <item row="0" column="0">
+            <widget class="QLineEdit" name="lineEditAssetSearch"/>
+           </item>
+           <item row="1" column="0">
+            <widget class="QTreeView" name="treeViewAsset"/>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tabShot">
+        <attribute name="title">
+         <string>Shots</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <layout class="QGridLayout" name="gridLayoutShot">
+           <item row="1" column="0">
+            <widget class="QTreeView" name="treeViewShot"/>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLineEdit" name="lineEditShotSearch"/>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tabSequence">
+        <attribute name="title">
+         <string>Sequences</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_5">
+         <item row="0" column="0">
+          <layout class="QGridLayout" name="gridLayoutSequence">
+           <item row="1" column="0">
+            <widget class="QTreeView" name="treeViewSequence"/>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLineEdit" name="lineEditSequenceSearch"/>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QPushButton" name="pushButtonPublish">
+       <property name="text">
+        <string>Publish</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QSplitter" name="splitter">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <widget class="QLabel" name="labelVersion">
+        <property name="text">
+         <string>Version</string>
+        </property>
+       </widget>
+       <widget class="QListWidget" name="listWidgetVersion">
+        <property name="showDropIndicator" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="dragEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="dragDropMode">
+         <enum>QAbstractItemView::NoDragDrop</enum>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="lineEditDescription">
+        <property name="inputMask">
+         <string/>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="maxLength">
+         <number>32767</number>
+        </property>
+        <property name="placeholderText">
+         <string>Version Description</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="labelAttachment">
+        <property name="text">
+         <string>Attachment</string>
+        </property>
+       </widget>
+       <widget class="QListWidget" name="listWidgetAttachment"/>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>lineEditAssetSearch</sender>
+   <signal>returnPressed()</signal>
+   <receiver>ShotgunDesktopVersionDialog</receiver>
+   <slot>search_asset_slot()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>102</x>
+     <y>42</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>469</x>
+     <y>542</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditShotSearch</sender>
+   <signal>returnPressed()</signal>
+   <receiver>ShotgunDesktopVersionDialog</receiver>
+   <slot>search_shot_slot()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>102</x>
+     <y>42</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>297</x>
+     <y>16</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditSequenceSearch</sender>
+   <signal>returnPressed()</signal>
+   <receiver>ShotgunDesktopVersionDialog</receiver>
+   <slot>search_sequence_slot()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>69</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>288</x>
+     <y>75</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditMyTaskSearch</sender>
+   <signal>returnPressed()</signal>
+   <receiver>ShotgunDesktopVersionDialog</receiver>
+   <slot>search_mytask_slot()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>132</x>
+     <y>60</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>332</x>
+     <y>175</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButtonPublish</sender>
+   <signal>clicked()</signal>
+   <receiver>ShotgunDesktopVersionDialog</receiver>
+   <slot>publish_slot()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>649</x>
+     <y>574</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>242</x>
+     <y>452</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>search_asset_slot()</slot>
+  <slot>search_shot_slot()</slot>
+  <slot>search_sequence_slot()</slot>
+  <slot>search_mytask_slot()</slot>
+  <slot>publish_slot()</slot>
+ </slots>
+</ui>
