@@ -21,7 +21,7 @@ from pprint import pprint
 import getpass
 
 
-class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_ShotgunDesktopVersionDialog):
+class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_ShotgunDesktopTimelogDialog):
 
     def __init__(self, project_name, parent=None):
         super(DesktopTimelogDialog, self).__init__(parent)
@@ -36,7 +36,8 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
         self.treeViewMyTask.clicked.connect(self.treeview_single_clicked)
         self.timer.timeout.connect(self.disable_double_clicked)
 
-        self.pushButtonPublish.setEnabled(False)
+        self.pushButtonSubmit.setEnabled(False)
+        self.dateEditDate.setDate(QtCore.QDate.currentDate())
 
         self.project_name = project_name
         self.user_name = getpass.getuser()
@@ -694,9 +695,9 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
 
         if project_level_info:
             self._project_level_info = project_level_info
-            self.pushButtonPublish.setEnabled(True)
+            self.pushButtonSubmit.setEnabled(True)
         else:
-            self.pushButtonPublish.setEnabled(False)
+            self.pushButtonSubmit.setEnabled(False)
         # self.show_published_files_info(project_level_info)
 
     def get_sequence_level_info(self, source_model, index):
@@ -841,6 +842,11 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
         # strip chinese name if source_model is asset
         text = text.split("|")[0]
         level_struct_item.append(text)
+
+    @QtCore.Slot()
+    def submit_slot(self):
+        date = self.dateEditDate.date().toString(QtCore.Qt.ISODate)
+        print date
 
 
 if __name__ == "__main__":
