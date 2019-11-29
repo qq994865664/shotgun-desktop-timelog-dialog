@@ -9,7 +9,7 @@ import os
 import ui_sg_desktop_timelog_dialog
 
 from PySide2.QtCore import QPoint
-from PySide2.QtWidgets import QListWidgetItem, QMenu, QAction, QMessageBox
+from PySide2.QtWidgets import QListWidgetItem, QMenu, QAction, QMessageBox, QTableWidgetItem
 from PySide2.QtGui import QStandardItemModel, QStandardItem, QCursor
 from PySide2 import QtWidgets, QtCore
 
@@ -35,6 +35,22 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
         self.treeViewSequence.clicked.connect(self.treeview_single_clicked)
         self.treeViewMyTask.clicked.connect(self.treeview_single_clicked)
         self.timer.timeout.connect(self.disable_double_clicked)
+
+        self.tableWidgetTimelog.setColumnWidth(0, 80)
+        self.tableWidgetTimelog.setColumnWidth(1, 100)
+        self.tableWidgetTimelog.setColumnWidth(2, 60)
+        self.tableWidgetTimelog.setColumnWidth(3, 278)
+        self.tableWidgetTimelog.setColumnWidth(4, 30)
+        self.tableWidgetTimelog.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.tableWidgetTimelog.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.tableWidgetTimelog.setCornerButtonEnabled(True)
+        self.tableWidgetTimelog.horizontalHeader().setSectionsClickable(False)
+        self.tableWidgetTimelog.verticalHeader().setVisible(False)
+        self.tableWidgetTimelog.horizontalHeader().setVisible(True)
+        self.tableWidgetTimelog.setFrameShape(QtWidgets.QFrame.StyledPanel)
+
+        self.tableWidgetTimelog.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.tableWidgetTimelog.customContextMenuRequested[QtCore.QPoint].connect(self.right_context_menu)
 
         self.pushButtonSubmit.setEnabled(False)
         self.dateEditDate.setDate(QtCore.QDate.currentDate())
@@ -675,32 +691,35 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
         :return:
         '''
         tab_index = self.tabWidgetList.currentIndex()
-        project_level_info = None
+        project_level_info = []
+        timelog_list = []
         self._project_level_info = []
         if tab_index == 0:
             # mytask table
-            project_level_info = self.get_mytask_level_info(self.source_mytask_model, index)
+            project_level_info, timelog_list = self.get_mytask_timelog_list(self.source_mytask_model, index)
 
         elif tab_index == 1:
             # asset table
-            project_level_info = self.get_asset_level_info(self.source_asset_model, index)
+            project_level_info, timelog_list = self.get_asset_timelog_list(self.source_asset_model, index)
 
         elif tab_index == 2:
             # shot table
-            project_level_info = self.get_shot_level_info(self.source_shot_model, index)
+            project_level_info, timelog_list = self.get_shot_timelog_list(self.source_shot_model, index)
 
         elif tab_index == 3:
             # sequence table
-            project_level_info = self.get_sequence_level_info(self.source_sequence_model, index)
+            project_level_info, timelog_list = self.get_sequence_timelog_list(self.source_sequence_model, index)
+
+        if timelog_list:
+            self.show_timelog_info(timelog_list)
 
         if project_level_info:
             self._project_level_info = project_level_info
             self.pushButtonSubmit.setEnabled(True)
         else:
             self.pushButtonSubmit.setEnabled(False)
-        # self.show_published_files_info(project_level_info)
 
-    def get_sequence_level_info(self, source_model, index):
+    def get_sequence_timelog_list(self, source_model, index):
         '''
         get the sequence published file from shotgun
         :param source_model: the source model
@@ -708,7 +727,7 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
         :return: file info list
         '''
         project_level_struct_item = []
-        published_file_info_list = None
+        timelog_list = []
         project_level_info = []
         self.get_upper_level_item(source_model, project_level_struct_item, index)
         item_level = len(project_level_struct_item)
@@ -719,16 +738,15 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
             _sequence_step_task_name = project_level_struct_item[2]
             project_level_info = project_level_struct_item
 
-            # dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name,
-            #                                                "sequence",
-            #                                                sequence_name=_sequence_name,
-            #                                                sequence_step_name=_sequence_step_name,
-            #                                                sequence_step_task_name=_sequence_step_task_name)
-            # published_file_info_list = self.sg.get_published_file_list(dict_data)
-        # return published_file_info_list
-        return project_level_info
+            dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name,
+                                                           "sequence",
+                                                           sequence_name=_sequence_name,
+                                                           sequence_step_name=_sequence_step_name,
+                                                           sequence_step_task_name=_sequence_step_task_name)
+            timelog_list = self.sg.get_time_log(dict_data)
+        return project_level_info, timelog_list
 
-    def get_shot_level_info(self, source_model, index):
+    def get_shot_timelog_list(self, source_model, index):
         '''
         get the shot published file from shotgun
         :param source_model: the source model
@@ -737,7 +755,7 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
         '''
         project_level_struct_item = []
         project_level_info = []
-        published_file_info_list = None
+        timelog_list = []
         self.get_upper_level_item(source_model, project_level_struct_item, index)
         item_level = len(project_level_struct_item)
         if item_level >= 4:
@@ -748,16 +766,15 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
             _sequence_shot_step_task_name = project_level_struct_item[3]
             project_level_info = project_level_struct_item
 
-        #     dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name, "shot",
-        #                                                    sequence_name=_sequence_name,
-        #                                                    sequence_shot_name=_sequence_shot_name,
-        #                                                    sequence_shot_step_name=_sequence_shot_step_name,
-        #                                                    sequence_shot_step_task_name=_sequence_shot_step_task_name)
-        #     published_file_info_list = self.sg.get_published_file_list(dict_data)
-        # return published_file_info_list
-        return project_level_info
+            dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name, "shot",
+                                                           sequence_name=_sequence_name,
+                                                           sequence_shot_name=_sequence_shot_name,
+                                                           sequence_shot_step_name=_sequence_shot_step_name,
+                                                           sequence_shot_step_task_name=_sequence_shot_step_task_name)
+            timelog_list = self.sg.get_time_log(dict_data)
+        return project_level_info, timelog_list
 
-    def get_asset_level_info(self, source_model, index):
+    def get_asset_timelog_list(self, source_model, index):
         '''
         get the asset published file from shotgun
         :param source_model: the source model
@@ -766,7 +783,7 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
         '''
         project_level_struct_item = []
         project_level_info = []
-        published_file_info_list = None
+        timelog_list = []
         self.get_upper_level_item(source_model, project_level_struct_item, index)
         item_level = len(project_level_struct_item)
         if item_level >= 4:
@@ -776,14 +793,14 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
             _asset_step_task_name = project_level_struct_item[3]
             project_level_info = project_level_struct_item
 
-        #     dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name, "asset",
-        #                                                    asset_name=_asset_name, asset_step_name=_asset_step_name,
-        #                                                    asset_step_task_name=_asset_step_task_name)
-        #     published_file_info_list = self.sg.get_published_file_list(dict_data)
-        # return published_file_info_list
-        return project_level_info
+            dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name, "asset",
+                                                           asset_name=_asset_name, asset_step_name=_asset_step_name,
+                                                           asset_step_task_name=_asset_step_task_name)
+            timelog_list = self.sg.get_time_log(dict_data)
 
-    def get_mytask_level_info(self, source_model, index):
+        return project_level_info, timelog_list
+
+    def get_mytask_timelog_list(self, source_model, index):
         '''
         get the mytask published file from shotgun
         :param source_model: the source model
@@ -792,7 +809,7 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
         '''
         project_level_struct_item = []
         project_level_info = []
-        published_file_info_list = None
+        timelog_list = []
         self.get_upper_level_item(source_model, project_level_struct_item, index)
         item_level = len(project_level_struct_item)
         if item_level >= 4:
@@ -803,29 +820,29 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
             mytask_step_task_name = project_level_struct_item[3]
             project_level_info = project_level_struct_item
 
-        #     if mytask_type == 'Asset':
-        #         dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name, "asset",
-        #                                                        asset_name=mytask_name,
-        #                                                        asset_step_name=mytask_step_name,
-        #                                                        asset_step_task_name=mytask_step_task_name)
-        #         published_file_info_list = self.sg.get_published_file_list(dict_data)
-        #     elif mytask_type == 'Shot':
-        #         sequence_name = mytask_name.split("_")[0]
-        #         dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name, "shot",
-        #                                                        sequence_name=sequence_name,
-        #                                                        sequence_shot_name=mytask_name,
-        #                                                        sequence_shot_step_name=mytask_step_name,
-        #                                                        sequence_shot_step_task_name=mytask_step_task_name)
-        #         published_file_info_list = self.sg.get_published_file_list(dict_data)
-        #     elif mytask_type == 'Sequence':
-        #         dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name,
-        #                                                        "sequence",
-        #                                                        sequence_name=mytask_name,
-        #                                                        sequence_step_name=mytask_step_name,
-        #                                                        sequence_step_task_name=mytask_step_task_name)
-        #         published_file_info_list = self.sg.get_published_file_list(dict_data)
-        # return published_file_info_list
-        return project_level_info
+            if mytask_type == 'Asset':
+                dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name, "asset",
+                                                               asset_name=mytask_name,
+                                                               asset_step_name=mytask_step_name,
+                                                               asset_step_task_name=mytask_step_task_name)
+                timelog_list = self.sg.get_time_log(dict_data)
+            elif mytask_type == 'Shot':
+                sequence_name = mytask_name.split("_")[0]
+                dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name, "shot",
+                                                               sequence_name=sequence_name,
+                                                               sequence_shot_name=mytask_name,
+                                                               sequence_shot_step_name=mytask_step_name,
+                                                               sequence_shot_step_task_name=mytask_step_task_name)
+                timelog_list = self.sg.get_time_log(dict_data)
+            elif mytask_type == 'Sequence':
+                dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name,
+                                                               "sequence",
+                                                               sequence_name=mytask_name,
+                                                               sequence_step_name=mytask_step_name,
+                                                               sequence_step_task_name=mytask_step_task_name)
+                timelog_list = self.sg.get_time_log(dict_data)
+
+        return project_level_info, timelog_list
 
     # get item list for treeView***
     def get_upper_level_item(self, source_model, level_struct_item, index):
@@ -847,6 +864,48 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
     def submit_slot(self):
         date = self.dateEditDate.date().toString(QtCore.Qt.ISODate)
         print date
+
+    @QtCore.Slot(QPoint)
+    def right_context_menu(self, pos):
+        '''
+        this is the right context menu for listwidget item which you selected
+        it will call the function below
+        '''
+        pop_menu = QMenu()
+        self.show_right_context_menu(pop_menu)
+        pop_menu.exec_(QCursor.pos())
+
+    def show_right_context_menu(self, pop_menu):
+        pop_menu.addAction(QAction(u'right menu', self, triggered=self.right_menu_process))
+
+    def right_menu_process(self):
+        pass
+
+    def show_timelog_info(self, timelog_list):
+        pprint(timelog_list)
+        self.tableWidgetTimelog.setRowCount(len(timelog_list))
+        row = -1
+        for timelog in timelog_list:
+            row += 1
+            user = timelog['user']['name']
+            date = timelog['date']
+            duration = str(timelog['duration'] / 60)
+            description = timelog['description']
+            id = str(timelog['id'])
+            timelog_info = [user, date, duration, description, id]
+            self.update_table_item(row, timelog_info)
+
+    def update_table_item(self, row, timelog_info):
+        column = -1
+        for timelog in timelog_info:
+            column += 1
+            item = QTableWidgetItem()
+            if column == 2:
+                timelog += " hour"
+            item.setText(timelog)
+            if not column == 3:
+                item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.tableWidgetTimelog.setItem(row, column, item)
 
 
 if __name__ == "__main__":
