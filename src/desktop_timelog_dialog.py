@@ -12,7 +12,7 @@ import ui_sg_desktop_timelog_login
 from PySide2.QtCore import QPoint
 from PySide2.QtWidgets import QListWidgetItem, QMenu, QAction, QMessageBox, QTableWidgetItem
 from PySide2.QtGui import QStandardItemModel, QStandardItem, QCursor
-from PySide2 import QtWidgets, QtCore
+from PySide2 import QtWidgets, QtCore, QtGui
 
 from shotgun_tool_package import sg_config
 from shotgun_tool_package import sg_publish
@@ -22,21 +22,34 @@ from pprint import pprint
 import getpass
 
 
-class DesktopTimelogLogin(QtWidgets.QWidget, ui_sg_desktop_timelog_login.Ui_TimelogLogin):
+class DesktopTimelogLogin(QtWidgets.QDialog, ui_sg_desktop_timelog_login.Ui_TimelogLogin):
     def __init__(self, parent=None):
         super(DesktopTimelogLogin, self).__init__(parent)
         self.setupUi(self)
         self.comboBoxProjectName.clear()
         self.comboBoxProjectName.addItem("XCM_Test")
+        self.comboBoxProjectName.addItem("XCM_2020DY")
+        self.project_name = ""
+        self.user_name = ""
+        self.password = ""
 
     @QtCore.Slot()
-    def accept(self):
-        print self.lineEditUserName.text()
-        print self.lineEditPassWd.text()
+    def login(self):
+        sg = sg_publish.ShotgunPublish()
+        self.project_name = self.comboBoxProjectName.currentText()
+        self.user_name = self.lineEditUserName.text()
+        self.password = self.lineEditPassWd.text()
+        if not sg.get_user(self.user_name):
+            QMessageBox.warning(self, "Error", u'数据库中未找到该用户名！',
+                                buttons=QMessageBox.Ok, defaultButton=QMessageBox.Ok)
+            return
+        self.accept()
 
-    @QtCore.Slot()
-    def reject(self):
-        print self.comboBoxProjectName.currentText()
+    def get_user_name(self):
+        return self.user_name
+
+    def get_project_name(self):
+        return self.project_name
 
 
 class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_ShotgunDesktopTimelogDialog):
@@ -1015,7 +1028,10 @@ if __name__ == "__main__":
     import sys
 
     app = QtWidgets.QApplication(sys.argv)
-    # win = DesktopTimelogDialog("XCM_Test", "zhonghao")
-    win = DesktopTimelogLogin()
-    win.show()
-    sys.exit(app.exec_())
+    login = DesktopTimelogLogin()
+    if login.exec_() == QtWidgets.QDialog.Accepted:
+        project_name = login.get_project_name()
+        user_name = login.get_user_name()
+        win = DesktopTimelogDialog(project_name, user_name)
+        win.show()
+        sys.exit(app.exec_())
