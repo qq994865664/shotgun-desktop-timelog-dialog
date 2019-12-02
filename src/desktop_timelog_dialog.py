@@ -7,6 +7,7 @@
 # @IDE          :PyCharm
 import os
 import ui_sg_desktop_timelog_dialog
+import ui_sg_desktop_timelog_login
 
 from PySide2.QtCore import QPoint
 from PySide2.QtWidgets import QListWidgetItem, QMenu, QAction, QMessageBox, QTableWidgetItem
@@ -21,9 +22,26 @@ from pprint import pprint
 import getpass
 
 
+class DesktopTimelogLogin(QtWidgets.QWidget, ui_sg_desktop_timelog_login.Ui_TimelogLogin):
+    def __init__(self, parent=None):
+        super(DesktopTimelogLogin, self).__init__(parent)
+        self.setupUi(self)
+        self.comboBoxProjectName.clear()
+        self.comboBoxProjectName.addItem("XCM_Test")
+
+    @QtCore.Slot()
+    def accept(self):
+        print self.lineEditUserName.text()
+        print self.lineEditPassWd.text()
+
+    @QtCore.Slot()
+    def reject(self):
+        print self.comboBoxProjectName.currentText()
+
+
 class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_ShotgunDesktopTimelogDialog):
 
-    def __init__(self, project_name, parent=None):
+    def __init__(self, project_name, user_name, parent=None):
         super(DesktopTimelogDialog, self).__init__(parent)
         self.setupUi(self)
         self.timer = QtCore.QTimer()
@@ -38,10 +56,10 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
         self.tabWidgetList.currentChanged.connect(self.tab_widget_list_index)
         self.tabWidgetList.setCurrentIndex(0)
 
-        self.tableWidgetTimelog.setColumnWidth(0, 80)
+        self.tableWidgetTimelog.setColumnWidth(0, 90)
         self.tableWidgetTimelog.setColumnWidth(1, 100)
-        self.tableWidgetTimelog.setColumnWidth(2, 60)
-        self.tableWidgetTimelog.setColumnWidth(3, 278)
+        self.tableWidgetTimelog.setColumnWidth(2, 70)
+        self.tableWidgetTimelog.setColumnWidth(3, 300)
         self.tableWidgetTimelog.setColumnWidth(4, 30)
         self.tableWidgetTimelog.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWidgetTimelog.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
@@ -58,7 +76,7 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
         self.dateEditDate.setDate(QtCore.QDate.currentDate())
 
         self.project_name = project_name
-        self.user_name = getpass.getuser()
+        self.user_name = user_name
         self.sg = sg_publish.ShotgunPublish()
         self.project_entity = self.sg.get_project(self.project_name)
 
@@ -997,6 +1015,7 @@ if __name__ == "__main__":
     import sys
 
     app = QtWidgets.QApplication(sys.argv)
-    win = DesktopTimelogDialog("XCM_Test")
+    # win = DesktopTimelogDialog("XCM_Test", "zhonghao")
+    win = DesktopTimelogLogin()
     win.show()
     sys.exit(app.exec_())
