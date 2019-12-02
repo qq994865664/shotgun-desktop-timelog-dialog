@@ -35,6 +35,8 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
         self.treeViewSequence.clicked.connect(self.treeview_single_clicked)
         self.treeViewMyTask.clicked.connect(self.treeview_single_clicked)
         self.timer.timeout.connect(self.disable_double_clicked)
+        self.tabWidgetList.currentChanged.connect(self.tab_widget_list_index)
+        self.tabWidgetList.setCurrentIndex(0)
 
         self.tableWidgetTimelog.setColumnWidth(0, 80)
         self.tableWidgetTimelog.setColumnWidth(1, 100)
@@ -73,6 +75,16 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
         self.tab_mytask_ui()
 
         self._project_level_info = []
+        self._tab_index = self.tabWidgetList.currentIndex()
+
+    @QtCore.Slot(int)
+    def tab_widget_list_index(self, index):
+        '''
+        tabWidget changed slot
+        :param index: tabWidget index
+        :return:
+        '''
+        self._tab_index = index
 
     @QtCore.Slot()
     def search_asset_slot(self):
@@ -690,7 +702,7 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
         :param index: index of model
         :return:
         '''
-        tab_index = self.tabWidgetList.currentIndex()
+        tab_index = self._tab_index
         project_level_info = []
         timelog_list = []
         self._project_level_info = []
@@ -710,14 +722,15 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
             # sequence table
             project_level_info, timelog_list = self.get_sequence_timelog_list(self.source_sequence_model, index)
 
-        if timelog_list:
-            self.show_timelog_info(timelog_list)
-
         if project_level_info:
+            self.tableWidgetTimelog.setRowCount(0)
             self._project_level_info = project_level_info
             self.pushButtonSubmit.setEnabled(True)
         else:
             self.pushButtonSubmit.setEnabled(False)
+
+        if timelog_list:
+            self.show_timelog_info(timelog_list)
 
     def get_sequence_timelog_list(self, source_model, index):
         '''
@@ -863,7 +876,72 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
     @QtCore.Slot()
     def submit_slot(self):
         date = self.dateEditDate.date().toString(QtCore.Qt.ISODate)
-        print date
+        duration = int(self.lineEditDuration.text()) * 60
+        description = self.lineEditDescription.text()
+        dict_data = self.get_dict_data()
+        result = self.sg.create_time_log(date, duration, dict_data, description)
+        self.update_timelog_info()
+
+    def get_dict_data(self):
+        project_level_struct_item = self._project_level_info
+        dict_data = {}
+        tab_index = self._tab_index
+        if tab_index == 0:
+            mytask_type = project_level_struct_item[0]
+            mytask_name = project_level_struct_item[1]
+            mytask_step_name = project_level_struct_item[2]
+            mytask_step_task_name = project_level_struct_item[3]
+
+            if mytask_type == 'Asset':
+                dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name, "asset",
+                                                               asset_name=mytask_name,
+                                                               asset_step_name=mytask_step_name,
+                                                               asset_step_task_name=mytask_step_task_name)
+
+            elif mytask_type == 'Shot':
+                sequence_name = mytask_name.split("_")[0]
+                dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name, "shot",
+                                                               sequence_name=sequence_name,
+                                                               sequence_shot_name=mytask_name,
+                                                               sequence_shot_step_name=mytask_step_name,
+                                                               sequence_shot_step_task_name=mytask_step_task_name)
+
+            elif mytask_type == 'Sequence':
+                dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name,
+                                                               "sequence",
+                                                               sequence_name=mytask_name,
+                                                               sequence_step_name=mytask_step_name,
+                                                               sequence_step_task_name=mytask_step_task_name)
+        elif tab_index == 1:
+            _asset_name = project_level_struct_item[1]
+            _asset_step_name = project_level_struct_item[2]
+            _asset_step_task_name = project_level_struct_item[3]
+
+            dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name, "asset",
+                                                           asset_name=_asset_name, asset_step_name=_asset_step_name,
+                                                           asset_step_task_name=_asset_step_task_name)
+        elif tab_index == 2:
+            _sequence_name = project_level_struct_item[0]
+            _sequence_shot_name = project_level_struct_item[1]
+            _sequence_shot_step_name = project_level_struct_item[2]
+            _sequence_shot_step_task_name = project_level_struct_item[3]
+
+            dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name, "shot",
+                                                           sequence_name=_sequence_name,
+                                                           sequence_shot_name=_sequence_shot_name,
+                                                           sequence_shot_step_name=_sequence_shot_step_name,
+                                                           sequence_shot_step_task_name=_sequence_shot_step_task_name)
+        elif tab_index == 3:
+            _sequence_name = project_level_struct_item[0]
+            _sequence_step_name = project_level_struct_item[1]
+            _sequence_step_task_name = project_level_struct_item[2]
+
+            dict_data = sg_base_find.create_project_struct(self.project_name, self.user_name,
+                                                           "sequence",
+                                                           sequence_name=_sequence_name,
+                                                           sequence_step_name=_sequence_step_name,
+                                                           sequence_step_task_name=_sequence_step_task_name)
+        return dict_data
 
     @QtCore.Slot(QPoint)
     def right_context_menu(self, pos):
@@ -876,13 +954,15 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
         pop_menu.exec_(QCursor.pos())
 
     def show_right_context_menu(self, pop_menu):
-        pop_menu.addAction(QAction(u'right menu', self, triggered=self.right_menu_process))
+        pop_menu.addAction(QAction(u'delete', self, triggered=self.right_menu_process))
 
     def right_menu_process(self):
-        pass
+        current_row = self.tableWidgetTimelog.currentRow()
+        id = self.tableWidgetTimelog.item(current_row, 4).text()
+        self.sg.delete("TimeLog", int(id))
+        self.update_timelog_info()
 
     def show_timelog_info(self, timelog_list):
-        pprint(timelog_list)
         self.tableWidgetTimelog.setRowCount(len(timelog_list))
         row = -1
         for timelog in timelog_list:
@@ -906,6 +986,11 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
             if not column == 3:
                 item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
             self.tableWidgetTimelog.setItem(row, column, item)
+
+    def update_timelog_info(self):
+        dict_data = self.get_dict_data()
+        timelog_list = self.sg.get_time_log(dict_data)
+        self.show_timelog_info(timelog_list)
 
 
 if __name__ == "__main__":
