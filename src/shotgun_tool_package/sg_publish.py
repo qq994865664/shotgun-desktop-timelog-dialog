@@ -319,6 +319,10 @@ class ShotgunPublish(sg_base_find.ShotgunBaseFind):
         fields = ["content", "sg_status_list"]
         return self.find_one("Task", filters, fields)
 
+    def get_task_status_value(self, dict_data):
+        task_entity = self.get_task_status(dict_data)
+        return task_entity['sg_status_list']
+
     def create_time_log(self, date, duration, dict_data, description=None):
         project_entity, user_entity, link_entity, task_entity, version_entity = self.project_struct_parse(dict_data)
         data = {'project': project_entity,

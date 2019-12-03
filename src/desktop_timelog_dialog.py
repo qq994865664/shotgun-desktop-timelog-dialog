@@ -10,16 +10,13 @@ import ui_sg_desktop_timelog_dialog
 import ui_sg_desktop_timelog_login
 
 from PySide2.QtCore import QPoint
-from PySide2.QtWidgets import QListWidgetItem, QMenu, QAction, QMessageBox, QTableWidgetItem
-from PySide2.QtGui import QStandardItemModel, QStandardItem, QCursor
-from PySide2 import QtWidgets, QtCore, QtGui
+from PySide2.QtWidgets import QMenu, QAction, QMessageBox, QTableWidgetItem
+from PySide2.QtGui import QStandardItemModel, QStandardItem, QCursor, QDoubleValidator
+from PySide2 import QtWidgets, QtCore
 
-from shotgun_tool_package import sg_config
 from shotgun_tool_package import sg_publish
 from shotgun_tool_package import sg_base_find
-import datetime
 from pprint import pprint
-import getpass
 
 
 class DesktopTimelogLogin(QtWidgets.QDialog, ui_sg_desktop_timelog_login.Ui_TimelogLogin):
@@ -92,7 +89,7 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
         self.tableWidgetTimelog.setColumnWidth(3, 300)
         self.tableWidgetTimelog.setColumnWidth(4, 30)
         self.tableWidgetTimelog.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.tableWidgetTimelog.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.tableWidgetTimelog.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.tableWidgetTimelog.setCornerButtonEnabled(True)
         self.tableWidgetTimelog.horizontalHeader().setSectionsClickable(False)
         self.tableWidgetTimelog.verticalHeader().setVisible(False)
@@ -104,6 +101,10 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
 
         self.pushButtonSubmit.setEnabled(False)
         self.dateEditDate.setDate(QtCore.QDate.currentDate())
+
+        validator = QDoubleValidator(0, 999, 1, self)
+        validator.setNotation(QDoubleValidator.StandardNotation)
+        self.lineEditDuration.setValidator(validator)
 
         self.project_name = project_name
         self.user_name = user_name
@@ -924,7 +925,12 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
     @QtCore.Slot()
     def submit_slot(self):
         date = self.dateEditDate.date().toString(QtCore.Qt.ISODate)
-        duration = int(self.lineEditDuration.text()) * 60
+        duration_temp = self.lineEditDuration.text()
+        if not duration_temp:
+            QMessageBox.warning(self, "Error", u'Please input duration',
+                                buttons=QMessageBox.Ok, defaultButton=QMessageBox.Ok)
+            return
+        duration = float(duration_temp) * 60
         description = self.lineEditDescription.text()
         dict_data = self.get_dict_data()
         result = self.sg.create_time_log(date, duration, dict_data, description)
@@ -998,7 +1004,8 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
         it will call the function below
         '''
         pop_menu = QMenu()
-        self.show_right_context_menu(pop_menu)
+        if self.tableWidgetTimelog.itemAt(pos):
+            self.show_right_context_menu(pop_menu)
         pop_menu.exec_(QCursor.pos())
 
     def show_right_context_menu(self, pop_menu):
@@ -1006,8 +1013,8 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
 
     def right_menu_process(self):
         current_row = self.tableWidgetTimelog.currentRow()
-        id = self.tableWidgetTimelog.item(current_row, 4).text()
-        self.sg.delete("TimeLog", int(id))
+        timelog_id = self.tableWidgetTimelog.item(current_row, 4).text()
+        self.sg.delete("TimeLog", int(timelog_id))
         self.update_timelog_info()
 
     def show_timelog_info(self, timelog_list):
@@ -1017,10 +1024,10 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
             row += 1
             user = timelog['user']['name']
             date = timelog['date']
-            duration = str(timelog['duration'] / 60)
+            duration = str(timelog['duration'] / 60.0)
             description = timelog['description']
-            id = str(timelog['id'])
-            timelog_info = [user, date, duration, description, id]
+            timelog_id = str(timelog['id'])
+            timelog_info = [user, date, duration, description, timelog_id]
             self.update_table_item(row, timelog_info)
 
     def update_table_item(self, row, timelog_info):
@@ -1028,6 +1035,7 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
         for timelog in timelog_info:
             column += 1
             item = QTableWidgetItem()
+            item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
             if column == 2:
                 timelog += " hour"
             item.setText(timelog)
