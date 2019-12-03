@@ -26,19 +26,28 @@ class DesktopTimelogLogin(QtWidgets.QDialog, ui_sg_desktop_timelog_login.Ui_Time
     def __init__(self, parent=None):
         super(DesktopTimelogLogin, self).__init__(parent)
         self.setupUi(self)
-        self.comboBoxProjectName.clear()
-        self.comboBoxProjectName.addItem("XCM_Test")
-        self.comboBoxProjectName.addItem("XCM_2020DY")
         self.project_name = ""
         self.user_name = ""
         self.password = ""
+        self.comboBoxProjectName.clear()
+
+        project_list = self.get_project_list()
+        for project in project_list:
+            _project_name = project['name']
+            self.comboBoxProjectName.addItem(_project_name)
 
     @QtCore.Slot()
     def login(self):
-        sg = sg_publish.ShotgunPublish()
         self.project_name = self.comboBoxProjectName.currentText()
         self.user_name = self.lineEditUserName.text()
         self.password = self.lineEditPassWd.text()
+
+        if not self.password:
+            QMessageBox.warning(self, "Error", u'请输入密码',
+                                buttons=QMessageBox.Ok, defaultButton=QMessageBox.Ok)
+            return
+
+        sg = sg_publish.ShotgunPublish()
         if not sg.get_user(self.user_name):
             QMessageBox.warning(self, "Error", u'数据库中未找到该用户名！',
                                 buttons=QMessageBox.Ok, defaultButton=QMessageBox.Ok)
@@ -50,6 +59,14 @@ class DesktopTimelogLogin(QtWidgets.QDialog, ui_sg_desktop_timelog_login.Ui_Time
 
     def get_project_name(self):
         return self.project_name
+
+    def get_project_list(self):
+        sg = sg_publish.ShotgunPublish()
+        filters = [
+            ["sg_status", "is_not", "Lost"]
+        ]
+        fields = ["name", "sg_status"]
+        return sg.find("Project", filters, fields)
 
 
 class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_ShotgunDesktopTimelogDialog):
