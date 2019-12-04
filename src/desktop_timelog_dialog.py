@@ -435,7 +435,7 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
                                     found = False
                                     for mytask_link_name_index in range(mytask_link_name_item.rowCount()):
                                         mytask_step_name_item = mytask_link_name_item.child(mytask_link_name_index, 0)
-                                        if mytask_step_name == mytask_step_name_item.text():
+                                        if mytask_step_name.decode('utf-8') == mytask_step_name_item.text():
                                             found = True
                                             mytask_name_item = QStandardItem(mytask_name)
                                             mytask_name_item.setEditable(False)
