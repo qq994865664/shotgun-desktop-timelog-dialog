@@ -195,6 +195,22 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>lineEditMyTaskSearch</tabstop>
+  <tabstop>treeViewMyTask</tabstop>
+  <tabstop>lineEditAssetSearch</tabstop>
+  <tabstop>treeViewAsset</tabstop>
+  <tabstop>treeViewShot</tabstop>
+  <tabstop>lineEditShotSearch</tabstop>
+  <tabstop>treeViewSequence</tabstop>
+  <tabstop>lineEditSequenceSearch</tabstop>
+  <tabstop>tabWidgetList</tabstop>
+  <tabstop>dateEditDate</tabstop>
+  <tabstop>lineEditDuration</tabstop>
+  <tabstop>lineEditDescription</tabstop>
+  <tabstop>pushButtonSubmit</tabstop>
+  <tabstop>tableWidgetTimelog</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
@@ -236,8 +252,8 @@
    <slot>search_sequence_slot()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>120</x>
-     <y>69</y>
+     <x>119</x>
+     <y>68</y>
     </hint>
     <hint type="destinationlabel">
      <x>288</x>
@@ -252,8 +268,8 @@
    <slot>search_mytask_slot()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>132</x>
-     <y>60</y>
+     <x>144</x>
+     <y>59</y>
     </hint>
     <hint type="destinationlabel">
      <x>332</x>
@@ -268,8 +284,8 @@
    <slot>submit_slot()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>436</x>
-     <y>465</y>
+     <x>734</x>
+     <y>589</y>
     </hint>
     <hint type="destinationlabel">
      <x>596</x>

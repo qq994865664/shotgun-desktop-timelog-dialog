@@ -205,13 +205,15 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
                 if search_text in mytask_name:
                     mytask_name_item_temp = mytask_name_item.clone()
                     if mytask_name_item.hasChildren():
-                        mytask_step_item = mytask_name_item.child(0, 0)
-                        mytask_step_item_temp = mytask_step_item.clone()
-                        if mytask_step_item.hasChildren():
-                            mytask_step_task_item = mytask_step_item.child(0, 0)
-                            mytask_step_task_item_temp = mytask_step_task_item.clone()
-                            mytask_step_item_temp.appendRow(mytask_step_task_item_temp)
-                        mytask_name_item_temp.appendRow(mytask_step_item_temp)
+                        for mytask_name_index in range(mytask_name_item.rowCount()):
+                            mytask_step_item = mytask_name_item.child(mytask_name_index, 0)
+                            mytask_step_item_temp = mytask_step_item.clone()
+                            if mytask_step_item.hasChildren():
+                                for mytask_step_index in range(mytask_step_item.rowCount()):
+                                    mytask_step_task_item = mytask_step_item.child(mytask_step_index, 0)
+                                    mytask_step_task_item_temp = mytask_step_task_item.clone()
+                                    mytask_step_item_temp.appendRow(mytask_step_task_item_temp)
+                            mytask_name_item_temp.appendRow(mytask_step_item_temp)
                     mytask_name_item_temp.setEditable(False)
                     mytask_type_item_temp.appendRow(mytask_name_item_temp)
             if mytask_type_item_temp.hasChildren():
@@ -413,25 +415,52 @@ class DesktopTimelogDialog(QtWidgets.QWidget, ui_sg_desktop_timelog_dialog.Ui_Sh
 
         mytask_link_type_list_item = [mytask_type_sequence_item, mytask_type_asset_item, mytask_type_shot_item]
 
+        mytask_link_name_set = set()
         if mytask_entity_list:
+            # My God! It's really too complicated!!!!!!!!
+            self.source_mytask_model.appendColumn(mytask_link_type_list_item)
             for mytask_entity in mytask_entity_list:
                 mytask_name = mytask_entity['content']
                 mytask_link_name = mytask_entity['entity']['name']
                 mytask_link_type = mytask_entity['entity']['type']
                 mytask_step_name = mytask_entity['step']['name']
 
-                mytask_name_item = QStandardItem(mytask_name)
-                mytask_name_item.setEditable(False)
-                mytask_step_name_item = QStandardItem(mytask_step_name)
-                mytask_step_name_item.setEditable(False)
-                mytask_step_name_item.appendRow(mytask_name_item)
-                mytask_link_name_item = QStandardItem(mytask_link_name)
-                mytask_link_name_item.setEditable(False)
-                mytask_link_name_item.appendRow(mytask_step_name_item)
-                for mytask_link_type_item in mytask_link_type_list_item:
-                    if mytask_link_type_item.text() == mytask_link_type:
-                        mytask_link_type_item.appendRow(mytask_link_name_item)
-            self.source_mytask_model.appendColumn(mytask_link_type_list_item)
+                if mytask_link_name in mytask_link_name_set:
+                    for mytask_index in range(self.source_mytask_model.rowCount()):
+                        mytask_link_type_item = self.source_mytask_model.item(mytask_index, 0)
+                        if mytask_link_type == mytask_link_type_item.text():
+                            for mytask_link_type_index in range(mytask_link_type_item.rowCount()):
+                                mytask_link_name_item = mytask_link_type_item.child(mytask_link_type_index, 0)
+                                if mytask_link_name == mytask_link_name_item.text():
+                                    found = False
+                                    for mytask_link_name_index in range(mytask_link_name_item.rowCount()):
+                                        mytask_step_name_item = mytask_link_name_item.child(mytask_link_name_index, 0)
+                                        if mytask_step_name == mytask_step_name_item.text():
+                                            found = True
+                                            mytask_name_item = QStandardItem(mytask_name)
+                                            mytask_name_item.setEditable(False)
+                                            mytask_step_name_item.appendRow(mytask_name_item)
+                                    if not found:
+                                        mytask_name_item = QStandardItem(mytask_name)
+                                        mytask_name_item.setEditable(False)
+                                        mytask_step_name_item = QStandardItem(mytask_step_name)
+                                        mytask_step_name_item.setEditable(False)
+                                        mytask_step_name_item.appendRow(mytask_name_item)
+                                        mytask_link_name_item.appendRow(mytask_step_name_item)
+                else:
+                    mytask_name_item = QStandardItem(mytask_name)
+                    mytask_name_item.setEditable(False)
+                    mytask_step_name_item = QStandardItem(mytask_step_name)
+                    mytask_step_name_item.setEditable(False)
+                    mytask_step_name_item.appendRow(mytask_name_item)
+                    mytask_link_name_item = QStandardItem(mytask_link_name)
+                    mytask_link_name_item.setEditable(False)
+                    mytask_link_name_item.appendRow(mytask_step_name_item)
+                    for mytask_link_type_item in mytask_link_type_list_item:
+                        if mytask_link_type_item.text() == mytask_link_type:
+                            mytask_link_type_item.appendRow(mytask_link_name_item)
+
+                mytask_link_name_set.add(mytask_link_name)
 
     def tab_asset_search_init(self):
         '''

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file '.\sg_desktop_timelog_login.ui'
 #
-# Created: Mon Dec  2 14:33:08 2019
+# Created: Tue Dec  3 16:01:28 2019
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
